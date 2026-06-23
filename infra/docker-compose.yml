@@ -128,4 +128,3 @@ services:
 networks:
   default:
     name: ai-recruitment-network
-
