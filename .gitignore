@@ -1,0 +1,60 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Java / Maven / Gradle
+target/
+.gradle/
+out/
+*.class
+
+# Node / frontend tooling, if added later
+node_modules/
+.next/
+
+# Logs / runtime
+*.log
+logs/
+tmp/
+temp/
+
+# Docker / local data
+docker-data/
+data/
+volumes/
+
+# Database / vector index local dumps
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.rdb
+*.aof
+milvus-data/
+
+# Generated files
+coverage/
+htmlcov/
+reports/
