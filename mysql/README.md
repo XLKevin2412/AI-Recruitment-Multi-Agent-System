@@ -22,14 +22,17 @@ utf8mb4_unicode_ci
 当前脚本：
 
 ```text
-init/01-create-database.sql
+init/create-database.sql
+init/create-tables.sql
+init/seed-job-templates.sql
 ```
 
-后续建议继续添加：
+脚本职责：
 
 ```text
-init/02-create-tables.sql
-init/03-seed-job-templates.sql
+create-database.sql       创建数据库和字符集
+create-tables.sql         创建 V1 业务表和索引
+seed-job-templates.sql    写入计算机行业岗位模板
 ```
 
 ## 健康检查
@@ -43,4 +46,3 @@ SELECT 1;
 ```powershell
 docker exec ai-recruitment-mysql mysqladmin ping -h 127.0.0.1 -uroot -p
 ```
-
