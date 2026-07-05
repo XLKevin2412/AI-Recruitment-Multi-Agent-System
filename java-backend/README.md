@@ -1,16 +1,16 @@
-# AI Recruitment Java Backend
+# AI 招聘系统 Java 后端
 
-This module is the Spring Boot recruitment backend for the V1 hiring workflow.
+本模块是 V1 招聘流程的 Spring Boot 业务后端，负责候选人、岗位、申请流程、简历记录、AI 评估结果、邮件草稿、面试建议和问答入口等业务能力。
 
-## Run locally
+## 本地运行
 
-Start dependencies:
+先启动依赖服务：
 
 ```powershell
 docker compose -f ..\infra\docker-compose.yml --env-file ..\infra\.env up -d
 ```
 
-Set MySQL and Redis with environment variables. If the local `infra\.env` keeps the current development defaults, use:
+再设置 MySQL 和 Redis 环境变量。如果本地 `infra\.env` 使用当前开发默认值，可以使用：
 
 ```powershell
 $env:MYSQL_HOST="localhost"
@@ -23,33 +23,52 @@ $env:REDIS_PORT="6379"
 mvn spring-boot:run
 ```
 
-Default base URL: `http://localhost:8080/api`.
+默认访问地址：
 
-## Initial endpoints
+```text
+http://localhost:8080/api
+```
+
+## 主要接口
 
 - `GET /api/health`
 - `GET /api/actuator/health`
 - `GET /api/job-templates`
-- `GET /api/jobs?page=1&pageSize=20`, `POST /api/jobs`, `GET /api/jobs/{id}`, `PUT /api/jobs/{id}`, `DELETE /api/jobs/{id}`
-- `GET /api/candidates?page=1&pageSize=20`, `POST /api/candidates`, `GET /api/candidates/{id}`, `PUT /api/candidates/{id}`, `DELETE /api/candidates/{id}`
-- `GET /api/applications?page=1&pageSize=20`, `POST /api/applications`, `GET /api/applications/{id}`, `PUT /api/applications/{id}`, `DELETE /api/applications/{id}`
+- `GET /api/jobs?page=1&pageSize=20`
+- `POST /api/jobs`
+- `GET /api/jobs/{id}`
+- `PUT /api/jobs/{id}`
+- `DELETE /api/jobs/{id}`
+- `GET /api/candidates?page=1&pageSize=20`
+- `POST /api/candidates`
+- `GET /api/candidates/{id}`
+- `PUT /api/candidates/{id}`
+- `DELETE /api/candidates/{id}`
+- `GET /api/applications?page=1&pageSize=20`
+- `POST /api/applications`
+- `GET /api/applications/{id}`
+- `PUT /api/applications/{id}`
+- `DELETE /api/applications/{id}`
 - `POST /api/applications/{id}/resume`
-- `POST /api/applications/{id}/analysis`, `GET /api/applications/{id}/analysis`
-- `POST /api/applications/{id}/emails/draft`, `GET /api/applications/{id}/emails`
-- `POST /api/applications/{id}/interviews/propose`, `GET /api/applications/{id}/interviews`
+- `POST /api/applications/{id}/analysis`
+- `GET /api/applications/{id}/analysis`
+- `POST /api/applications/{id}/emails/draft`
+- `GET /api/applications/{id}/emails`
+- `POST /api/applications/{id}/interviews/propose`
+- `GET /api/applications/{id}/interviews`
 - `POST /api/applications/{id}/qa`
 
-## Application workflow rules
+## 申请流程规则
 
-- `POST /api/applications` only accepts `DRAFT` or `SUBMITTED` as the initial status.
-- `PUT /api/applications/{id}` updates status, resume binding, and current stage only.
-- Candidate and job bindings are immutable after application creation.
-- Invalid status transitions return `409 Conflict`.
+- `POST /api/applications` 创建申请时，只允许初始状态为 `DRAFT` 或 `SUBMITTED`。
+- `PUT /api/applications/{id}` 只更新申请状态、绑定简历和当前阶段。
+- 申请创建后，候选人和岗位绑定关系不可变。
+- 非法状态流转返回 `409 Conflict`。
 
-## V1 integration notes
+## V1 集成说明
 
-- The backend calls Python Agent Runtime through `AGENT_RUNTIME_BASE_URL`.
-- The backend calls RAG Service through `RAG_SERVICE_BASE_URL`.
-- Resume files are stored under `RESUME_STORAGE_DIR`.
-- Redis is used for job lookup and latest analysis cache, but cache failures do not fail business requests.
-- Current persistence uses Spring Data JPA. The original target mentioned MyBatis; migrating the data layer can be done later without changing the service API.
+- 后端通过 `AGENT_RUNTIME_BASE_URL` 调用 Python Agent Runtime。
+- 后端通过 `RAG_SERVICE_BASE_URL` 调用 RAG Service。
+- 简历文件存储在 `RESUME_STORAGE_DIR` 指定目录。
+- Redis 当前用于岗位查询缓存和最新分析结果缓存；缓存失败不会中断业务请求。
+- 当前持久化层使用 Spring Data JPA。原目标中提到 MyBatis，如需严格对齐，可在保持 REST API 不变的前提下迁移 Repository 层。

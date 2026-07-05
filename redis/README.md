@@ -1,16 +1,17 @@
 # Redis 工作区
 
-本工作区用于记录 Redis 的使用场景、key 命名规范和健康检查方式。
+本工作区用于记录 Redis 使用场景、key 命名规范、TTL 建议和健康检查方式。
 
 ## 使用场景
 
-V1 使用 Redis 保存：
+V1 使用 Redis 保存短期、高频、可过期的数据：
 
 - 幂等锁。
 - Agent 任务状态。
 - RAG 检索短期缓存。
 - DeepSeek 调用短期缓存。
 - 接口限流计数。
+- 岗位信息和最新分析结果缓存。
 
 ## Key 命名规范
 
@@ -27,6 +28,8 @@ ai-recruitment:application:lock:{applicationId}
 ai-recruitment:agent-run:status:{agentRunId}
 ai-recruitment:rag:search-cache:{hash}
 ai-recruitment:rate-limit:user:{userId}
+ai-recruitment:job:{jobId}
+ai-recruitment:analysis:latest:{applicationId}
 ```
 
 ## TTL 建议
@@ -37,6 +40,8 @@ ai-recruitment:rate-limit:user:{userId}
 | Agent 任务状态 | 24 小时 |
 | RAG 检索缓存 | 10-60 分钟 |
 | DeepSeek 短期缓存 | 10-60 分钟 |
+| 岗位信息缓存 | 10-60 分钟 |
+| 最新分析结果缓存 | 1 小时 |
 | 限流计数 | 1-60 分钟 |
 
 ## 健康检查
@@ -58,4 +63,3 @@ docker exec ai-recruitment-redis redis-cli -a <password> ping
 ```text
 PONG
 ```
-

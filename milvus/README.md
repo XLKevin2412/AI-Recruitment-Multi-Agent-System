@@ -1,40 +1,43 @@
 # Milvus 工作区
 
-本工作区用于记录 Milvus collection、索引和健康检查方式。
+本工作区用于记录 Milvus collection、索引策略、字段规划和健康检查方式。
 
 ## 部署模式
 
 V1 本地使用 Milvus Standalone。
 
-依赖：
+依赖组件：
 
 - etcd
 - MinIO
 
-这些依赖由 `infra/docker-compose.yml` 编排。
+这些依赖由 `infra/docker-compose.yml` 统一编排。
 
 ## Collection
 
-V1 建议使用一个统一 collection：
+V1 使用统一 collection：
 
 ```text
 recruitment_knowledge_chunks
 ```
 
+该 collection 用于保存简历、岗位要求、招聘知识和面试相关文本的向量片段。
+
 ## 字段规划
 
 | 字段 | 说明 |
 | --- | --- |
-| id | chunk ID |
-| source_type | RESUME / JOB_REQUIREMENT / KNOWLEDGE / TEMPLATE |
-| source_id | 来源业务 ID |
-| application_id | 申请 ID，可为空 |
-| job_position_id | 岗位 ID，可为空 |
-| chunk_index | 分片序号 |
-| content | 文本片段 |
-| embedding | 向量字段 |
-| metadata_json | 元数据 |
-| created_at | 创建时间 |
+| `evidence_id` | RAG 证据 ID，也是向量片段主键。 |
+| `document_id` | 文档 ID。 |
+| `source_type` | 来源类型，例如 `RESUME`、`JOB_REQUIREMENT`、`KNOWLEDGE`、`TEMPLATE`。 |
+| `source_id` | 来源业务 ID。 |
+| `application_id` | 申请 ID，可为空。 |
+| `job_position_id` | 岗位 ID，可为空。 |
+| `chunk_id` | 文本分片 ID。 |
+| `content` | 文本片段内容。 |
+| `metadata_json` | 元数据 JSON 字符串。 |
+| `created_at` | 创建时间。 |
+| `embedding` | 向量字段。 |
 
 ## 索引建议
 
@@ -43,15 +46,17 @@ index_type: HNSW
 metric_type: COSINE
 ```
 
+当前 RAG Service 会根据配置读取向量维度，并在 collection 不存在时创建索引。
+
 ## 健康检查
 
-基础检查：
+查看容器状态：
 
 ```powershell
 docker compose -f infra/docker-compose.yml ps milvus
 ```
 
-后续 RAG Service 应提供 smoke test：
+RAG Service 的后续 smoke test 应覆盖：
 
 ```text
 连接 Milvus
@@ -60,4 +65,3 @@ docker compose -f infra/docker-compose.yml ps milvus
 执行一次 topK 检索
 删除测试数据
 ```
-
