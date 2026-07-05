@@ -1,39 +1,35 @@
 package com.example.recruitment.application;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 public class JobApplicationRequest {
 
     @NotNull
-    private Long jobId;
+    private String jobId;
 
     @NotNull
-    private Long candidateId;
+    private String candidateId;
 
     @NotNull
     private ApplicationStatus status = ApplicationStatus.SUBMITTED;
 
-    @Min(0)
-    @Max(100)
-    private Integer resumeScore;
+    private String resumeId;
 
-    private String screeningSummary;
+    private String currentStage;
 
-    public Long getJobId() {
+    public String getJobId() {
         return jobId;
     }
 
-    public void setJobId(Long jobId) {
+    public void setJobId(String jobId) {
         this.jobId = jobId;
     }
 
-    public Long getCandidateId() {
+    public String getCandidateId() {
         return candidateId;
     }
 
-    public void setCandidateId(Long candidateId) {
+    public void setCandidateId(String candidateId) {
         this.candidateId = candidateId;
     }
 
@@ -45,19 +41,19 @@ public class JobApplicationRequest {
         this.status = status;
     }
 
-    public Integer getResumeScore() {
-        return resumeScore;
+    public String getResumeId() {
+        return resumeId;
     }
 
-    public void setResumeScore(Integer resumeScore) {
-        this.resumeScore = resumeScore;
+    public void setResumeId(String resumeId) {
+        this.resumeId = resumeId;
     }
 
-    public String getScreeningSummary() {
-        return screeningSummary;
+    public String getCurrentStage() {
+        return currentStage;
     }
 
-    public void setScreeningSummary(String screeningSummary) {
-        this.screeningSummary = screeningSummary;
+    public void setCurrentStage(String currentStage) {
+        this.currentStage = currentStage;
     }
 }

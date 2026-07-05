@@ -1,13 +1,14 @@
 package com.example.recruitment.job;
 
 import java.time.Instant;
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -16,30 +17,43 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "jobs")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Table(name = "job_positions")
 public class Job {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(length = 36)
+    private String id;
 
     @NotBlank
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = 200)
     private String title;
 
     @NotBlank
-    @Column(nullable = false, length = 80)
+    @Column(name = "job_type", nullable = false, length = 80)
+    private String jobType;
+
+    @Column(length = 100)
     private String department;
 
+    @Column(length = 50)
+    private String level;
+
     @NotBlank
-    @Column(nullable = false, length = 80)
-    private String location;
+    @Column(name = "required_skills_json", nullable = false, columnDefinition = "json")
+    private String requiredSkillsJson;
+
+    @Column(name = "preferred_skills_json", columnDefinition = "json")
+    private String preferredSkillsJson;
+
+    @Column(name = "experience_requirement", columnDefinition = "TEXT")
+    private String experienceRequirement;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(columnDefinition = "TEXT")
-    private String requirements;
+    @Column(name = "interview_requirements", columnDefinition = "TEXT")
+    private String interviewRequirements;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -54,6 +68,9 @@ public class Job {
 
     @PrePersist
     void onCreate() {
+        if (id == null || id.isBlank()) {
+            id = UUID.randomUUID().toString();
+        }
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
@@ -64,11 +81,11 @@ public class Job {
         updatedAt = Instant.now();
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -80,6 +97,14 @@ public class Job {
         this.title = title;
     }
 
+    public String getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(String jobType) {
+        this.jobType = jobType;
+    }
+
     public String getDepartment() {
         return department;
     }
@@ -88,12 +113,36 @@ public class Job {
         this.department = department;
     }
 
-    public String getLocation() {
-        return location;
+    public String getLevel() {
+        return level;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setLevel(String level) {
+        this.level = level;
+    }
+
+    public String getRequiredSkillsJson() {
+        return requiredSkillsJson;
+    }
+
+    public void setRequiredSkillsJson(String requiredSkillsJson) {
+        this.requiredSkillsJson = requiredSkillsJson;
+    }
+
+    public String getPreferredSkillsJson() {
+        return preferredSkillsJson;
+    }
+
+    public void setPreferredSkillsJson(String preferredSkillsJson) {
+        this.preferredSkillsJson = preferredSkillsJson;
+    }
+
+    public String getExperienceRequirement() {
+        return experienceRequirement;
+    }
+
+    public void setExperienceRequirement(String experienceRequirement) {
+        this.experienceRequirement = experienceRequirement;
     }
 
     public String getDescription() {
@@ -104,12 +153,12 @@ public class Job {
         this.description = description;
     }
 
-    public String getRequirements() {
-        return requirements;
+    public String getInterviewRequirements() {
+        return interviewRequirements;
     }
 
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
+    public void setInterviewRequirements(String interviewRequirements) {
+        this.interviewRequirements = interviewRequirements;
     }
 
     public JobStatus getStatus() {

@@ -125,6 +125,69 @@ services:
       retries: 20
       start_period: 60s
 
+  rag-service:
+    build:
+      context: ../rag-service
+    container_name: ai-recruitment-rag-service
+    restart: unless-stopped
+    environment:
+      MILVUS_HOST: milvus
+      MILVUS_GRPC_PORT: 19530
+      RAG_CHUNK_SIZE: ${RAG_CHUNK_SIZE:-700}
+      RAG_CHUNK_OVERLAP: ${RAG_CHUNK_OVERLAP:-120}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${RAG_SERVICE_PORT:-8200}:8200"
+    depends_on:
+      milvus:
+        condition: service_healthy
+
+  python-agent-runtime:
+    build:
+      context: ../python-agent-runtime
+    container_name: ai-recruitment-python-agent-runtime
+    restart: unless-stopped
+    environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${PYTHON_AGENT_RUNTIME_PORT:-8100}:8100"
+
+  java-backend:
+    build:
+      context: ../java-backend
+    container_name: ai-recruitment-java-backend
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ai_recruitment}
+      MYSQL_USERNAME: ${MYSQL_USER:-ai_recruitment}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      AGENT_RUNTIME_BASE_URL: http://python-agent-runtime:8100
+      RAG_SERVICE_BASE_URL: http://rag-service:8200
+      RESUME_STORAGE_DIR: /app/data/resumes
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${JAVA_BACKEND_PORT:-8080}:8080"
+    volumes:
+      - ./data/resumes:/app/data/resumes
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rag-service:
+        condition: service_started
+      python-agent-runtime:
+        condition: service_started
+
 networks:
   default:
     name: ai-recruitment-network

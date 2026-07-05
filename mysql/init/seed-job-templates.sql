@@ -1,4 +1,4 @@
-USE ai_recruitment;
+﻿USE ai_recruitment;
 
 INSERT INTO job_templates (
   id,
@@ -48,7 +48,7 @@ INSERT INTO job_templates (
   JSON_ARRAY('Next.js', 'Vite', 'Testing Library', 'E2E Testing', 'Design System'),
   '具备现代前端工程经验，能够独立实现管理后台和业务交互。',
   '负责前端页面、组件、状态管理、接口联调和用户体验优化。',
-  '重点考察 React/TypeScript、组件设计、接口联调和工程化实践。'
+  '重点考察 React、TypeScript、组件设计、接口联调和工程化实践。'
 ),
 (
   'tpl-test-engineer',
@@ -88,7 +88,7 @@ INSERT INTO job_templates (
   JSON_ARRAY('Flink', 'Kafka', 'Hadoop', 'HBase', 'Data Lake'),
   '具备大数据平台或实时计算开发经验，理解分布式系统基础。',
   '负责大数据计算任务、数据平台和实时数据处理。',
-  '重点考察 Spark/Flink、分布式计算、数据链路和性能优化经验。'
+  '重点考察 Spark、Flink、分布式计算、数据链路和性能优化经验。'
 ),
 (
   'tpl-devops-engineer',
@@ -130,4 +130,3 @@ ON DUPLICATE KEY UPDATE
   interview_requirements = VALUES(interview_requirements),
   active = 1,
   updated_at = CURRENT_TIMESTAMP(3);
-

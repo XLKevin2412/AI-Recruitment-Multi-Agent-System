@@ -8,7 +8,7 @@ spring:
     name: ai-recruitment-backend
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ai_recruitment}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: ${MYSQL_USERNAME:root}
+    username: ${MYSQL_USERNAME:${MYSQL_USER:root}}
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
@@ -22,7 +22,7 @@ spring:
         enabled: false
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -38,3 +38,10 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+
+services:
+  agent-runtime-base-url: ${AGENT_RUNTIME_BASE_URL:http://localhost:8100}
+  rag-service-base-url: ${RAG_SERVICE_BASE_URL:http://localhost:8200}
+
+storage:
+  resume-dir: ${RESUME_STORAGE_DIR:var/resumes}

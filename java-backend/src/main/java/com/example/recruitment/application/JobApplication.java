@@ -1,6 +1,7 @@
 package com.example.recruitment.application;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import com.example.recruitment.candidate.Candidate;
 import com.example.recruitment.job.Job;
@@ -10,8 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -21,16 +20,16 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "job_applications")
+@Table(name = "applications")
 public class JobApplication {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(length = 36)
+    private String id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "job_id", nullable = false)
+    @JoinColumn(name = "job_position_id", nullable = false)
     private Job job;
 
     @NotNull
@@ -43,11 +42,14 @@ public class JobApplication {
     @Column(nullable = false, length = 30)
     private ApplicationStatus status = ApplicationStatus.SUBMITTED;
 
-    @Column
-    private Integer resumeScore;
+    @Column(name = "resume_id", length = 36)
+    private String resumeId;
 
-    @Column(columnDefinition = "TEXT")
-    private String screeningSummary;
+    @Column(name = "current_stage", length = 50)
+    private String currentStage;
+
+    @Column(name = "submitted_at")
+    private Instant submittedAt;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -57,9 +59,15 @@ public class JobApplication {
 
     @PrePersist
     void onCreate() {
+        if (id == null || id.isBlank()) {
+            id = UUID.randomUUID().toString();
+        }
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
+        if (status == ApplicationStatus.SUBMITTED && submittedAt == null) {
+            submittedAt = now;
+        }
     }
 
     @PreUpdate
@@ -67,11 +75,11 @@ public class JobApplication {
         updatedAt = Instant.now();
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -99,20 +107,28 @@ public class JobApplication {
         this.status = status;
     }
 
-    public Integer getResumeScore() {
-        return resumeScore;
+    public String getResumeId() {
+        return resumeId;
     }
 
-    public void setResumeScore(Integer resumeScore) {
-        this.resumeScore = resumeScore;
+    public void setResumeId(String resumeId) {
+        this.resumeId = resumeId;
     }
 
-    public String getScreeningSummary() {
-        return screeningSummary;
+    public String getCurrentStage() {
+        return currentStage;
     }
 
-    public void setScreeningSummary(String screeningSummary) {
-        this.screeningSummary = screeningSummary;
+    public void setCurrentStage(String currentStage) {
+        this.currentStage = currentStage;
+    }
+
+    public Instant getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(Instant submittedAt) {
+        this.submittedAt = submittedAt;
     }
 
     public Instant getCreatedAt() {
