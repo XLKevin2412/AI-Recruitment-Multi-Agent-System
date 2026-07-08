@@ -10,7 +10,7 @@
 - 将向量写入内存存储或 Milvus。
 - 根据查询语句返回相似片段和证据 ID。
 
-当前 V1 使用确定性的本地 embedding，便于无外部模型凭据时完成本地演示。在 Docker Compose 中，`RAG_STORAGE_BACKEND=milvus` 会将向量写入 Milvus 并从 Milvus 检索。本地开发默认使用 `auto` 模式，如果 Milvus 不可用，会回退到内存存储。
+当前 V1 使用确定性的本地 embedding，便于无外部模型凭据时完成本地演示。在 Docker Compose 中，`RAG_STORAGE_BACKEND=milvus` 会将向量写入 Milvus 并从 Milvus 检索，索引策略为 HNSW + COSINE。本地开发默认使用 `auto` 模式，如果 Milvus 不可用，会回退到内存存储。
 
 ## 接口列表
 
@@ -47,4 +47,4 @@ http://localhost:8200
 
 - 将确定性 embedding 替换为真实 embedding 模型。
 - 增加 RAG 检索缓存和重排策略。
-- 补充 Milvus collection 初始化和 smoke test 自动化。
+- 补充真实 Milvus smoke test 和检索质量评测集。

@@ -131,8 +131,11 @@ services:
     container_name: ai-recruitment-rag-service
     restart: unless-stopped
     environment:
+      RAG_STORAGE_BACKEND: ${RAG_STORAGE_BACKEND:-milvus}
       MILVUS_HOST: milvus
       MILVUS_GRPC_PORT: 19530
+      MILVUS_COLLECTION: ${MILVUS_COLLECTION:-recruitment_knowledge_chunks}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-128}
       RAG_CHUNK_SIZE: ${RAG_CHUNK_SIZE:-700}
       RAG_CHUNK_OVERLAP: ${RAG_CHUNK_OVERLAP:-120}
       TZ: ${TZ:-Asia/Shanghai}
@@ -150,7 +153,8 @@ services:
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_TIMEOUT_SECONDS: ${DEEPSEEK_TIMEOUT_SECONDS:-30}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
       - "${PYTHON_AGENT_RUNTIME_PORT:-8100}:8100"

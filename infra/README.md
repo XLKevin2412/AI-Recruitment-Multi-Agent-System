@@ -15,6 +15,13 @@
 - Python Agent Runtime：智能体运行时服务。
 - Java Backend：招聘业务后端。
 
+## 关键运行时配置
+
+- `RAG_STORAGE_BACKEND=milvus`：Compose 默认让 RAG Service 使用 Milvus；本地单独开发可改为 `auto` 或 `memory`。
+- `MILVUS_COLLECTION=recruitment_knowledge_chunks`：RAG 片段统一写入该 collection，通过来源类型和业务 ID 过滤。
+- `DEEPSEEK_MODEL=deepseek-v4-flash`：Python Agent Runtime 默认模型；未配置 `DEEPSEEK_API_KEY` 时自动使用规则化 fallback。
+- `DEEPSEEK_TIMEOUT_SECONDS=30`：DeepSeek 单次请求超时时间。
+
 ## 本地启动
 
 ```powershell

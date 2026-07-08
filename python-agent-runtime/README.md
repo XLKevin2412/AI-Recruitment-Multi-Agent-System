@@ -10,7 +10,16 @@
 - 生成面试安排建议。
 - 基于 RAG 上下文回答招聘流程中的问题。
 
-当前版本优先保证本地闭环可演示。如果没有配置 `DEEPSEEK_API_KEY` 和 `DEEPSEEK_MODEL`，服务会使用确定性的规则化输出，避免本地开发必须依赖外部大模型凭据。
+当前版本优先保证本地闭环可演示。服务会优先使用 DeepSeek 的 OpenAI 兼容 `chat/completions` 接口和 JSON Output 生成结构化结果；如果没有配置 `DEEPSEEK_API_KEY`，或模型调用失败、返回空内容、返回非 JSON、字段校验失败，接口会自动回退到确定性的规则化输出，避免本地开发必须依赖外部大模型凭据。
+
+## DeepSeek 配置
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `DEEPSEEK_API_KEY` | 空 | DeepSeek API Key；为空时使用规则化 fallback。 |
+| `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | OpenAI 兼容 API 地址。 |
+| `DEEPSEEK_MODEL` | `deepseek-v4-flash` | 默认模型。 |
+| `DEEPSEEK_TIMEOUT_SECONDS` | `30` | 单次模型请求超时时间。 |
 
 ## 接口列表
 
@@ -36,6 +45,6 @@ http://localhost:8100
 
 ## 后续演进
 
-- 接入 DeepSeek 结构化调用。
-- 将规则化 Agent 输出替换为提示词和模型生成结果。
-- 补充 Agent 调用失败重试、超时控制和更完整的审计信息。
+- 补充更细粒度的 Agent 调用失败原因、耗时和成本统计。
+- 增加可配置提示词模板和面试场景模板。
+- 引入更完整的评测集，验证模型输出相关度和稳定性。
