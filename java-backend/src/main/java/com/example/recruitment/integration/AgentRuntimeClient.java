@@ -3,7 +3,12 @@ package com.example.recruitment.integration;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -12,9 +17,21 @@ import org.springframework.web.client.RestClient;
 public class AgentRuntimeClient {
 
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
 
-    public AgentRuntimeClient(@Value("${services.agent-runtime-base-url:http://localhost:8100}") String baseUrl) {
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+    @Autowired
+    public AgentRuntimeClient(
+            @Value("${services.agent-runtime-base-url:http://localhost:8100}") String baseUrl,
+            ObjectMapper objectMapper) {
+        this(RestClient.builder()
+                .requestFactory(new SimpleClientHttpRequestFactory())
+                .baseUrl(baseUrl)
+                .build(), objectMapper);
+    }
+
+    AgentRuntimeClient(RestClient restClient, ObjectMapper objectMapper) {
+        this.restClient = restClient;
+        this.objectMapper = objectMapper;
     }
 
     public ResumeParseResponse parseResume(ResumeParseRequest request) {
@@ -41,9 +58,17 @@ public class AgentRuntimeClient {
         return restClient.post()
                 .uri(path)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
+                .body(toJson(body))
                 .retrieve()
                 .body(responseType);
+    }
+
+    private String toJson(Object body) {
+        try {
+            return objectMapper.writeValueAsString(body);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalArgumentException("Failed to serialize agent runtime request", ex);
+        }
     }
 
     public record ResumeParseRequest(String traceId, String fileName, String fileContentBase64) {
