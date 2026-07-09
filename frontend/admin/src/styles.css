@@ -362,7 +362,6 @@ select:focus {
   min-height: 16px;
 }
 
-.json-view,
 .result-grid pre {
   max-height: 320px;
   overflow: auto;
@@ -374,6 +373,59 @@ select:focus {
   font-size: 13px;
   line-height: 1.55;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.analysis-text {
+  display: grid;
+  gap: 12px;
+}
+
+.analysis-summary,
+.analysis-card,
+.analysis-empty {
+  border: 1px solid #d7dfec;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 14px;
+}
+
+.analysis-summary,
+.analysis-empty {
+  display: grid;
+  gap: 8px;
+}
+
+.analysis-summary p,
+.analysis-empty p,
+.empty-text {
+  color: #475467;
+  line-height: 1.65;
+}
+
+.analysis-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.analysis-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.analysis-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: #344054;
+  line-height: 1.55;
+}
+
+.analysis-list li {
   overflow-wrap: anywhere;
 }
 
@@ -450,6 +502,7 @@ select:focus {
   .form-grid,
   .summary-grid,
   .analysis-grid,
+  .analysis-columns,
   .qa-row > div {
     grid-template-columns: 1fr;
   }

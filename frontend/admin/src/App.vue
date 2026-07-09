@@ -244,7 +244,38 @@
             </div>
           </div>
 
-          <pre class="json-view">{{ pretty(analysisReport || analysisTrigger || {}) }}</pre>
+          <div v-if="analysisReport" class="analysis-text">
+            <article class="analysis-summary">
+              <h3>分析摘要</h3>
+              <p>{{ analysisReport.summary || '暂无摘要' }}</p>
+            </article>
+
+            <div class="analysis-columns">
+              <article v-for="section in analysisSections" :key="section.key" class="analysis-card">
+                <h3>{{ section.title }}</h3>
+                <ul v-if="section.items.length" class="analysis-list">
+                  <li v-for="item in section.items" :key="item">{{ item }}</li>
+                </ul>
+                <p v-else class="empty-text">暂无</p>
+              </article>
+            </div>
+
+            <article class="analysis-summary">
+              <h3>证据来源</h3>
+              <p>{{ evidenceText }}</p>
+            </article>
+          </div>
+
+          <div v-else-if="analysisTrigger" class="analysis-empty">
+            <h3>分析任务已触发</h3>
+            <p>申请状态：{{ analysisTrigger.status || '-' }}</p>
+            <p>报告 ID：{{ analysisTrigger.reportId || '-' }}</p>
+          </div>
+
+          <div v-else class="analysis-empty">
+            <h3>暂无分析报告</h3>
+            <p>上传简历后点击“触发简历分析”，系统会在这里展示纯文字分析结果。</p>
+          </div>
         </section>
 
         <section v-show="activeStep === 'outputs'" class="section-layout">
@@ -412,6 +443,18 @@ const healthLabel = computed(() => {
   return health.value.status === 'UP' ? 'Backend UP' : 'Backend 异常';
 });
 
+const analysisSections = computed(() => [
+  { key: 'matched', title: '匹配技能', items: parseListField(analysisReport.value?.matchedSkillsJson) },
+  { key: 'missing', title: '缺失技能', items: parseListField(analysisReport.value?.missingSkillsJson) },
+  { key: 'strengths', title: '项目优势', items: parseListField(analysisReport.value?.strengthsJson) },
+  { key: 'risks', title: '风险点', items: parseListField(analysisReport.value?.risksJson) }
+]);
+
+const evidenceText = computed(() => {
+  const ids = parseListField(analysisReport.value?.ragEvidenceIdsJson);
+  return ids.length ? ids.join('、') : '暂无可展示证据 ID';
+});
+
 watch(
   [activeStep, selectedJobId, selectedCandidateId, selectedApplicationId, () => ({ ...jobForm }), () => ({ ...candidateForm })],
   saveStoredState,
@@ -473,6 +516,32 @@ function asArray(text) {
 
 function pretty(value) {
   return JSON.stringify(value, null, 2);
+}
+
+function parseListField(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value !== 'string') return [String(value)].filter(Boolean);
+
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.map(String).map((item) => item.trim()).filter(Boolean);
+    }
+    if (typeof parsed === 'string') {
+      return parsed.trim() ? [parsed.trim()] : [];
+    }
+  } catch {
+    // Fall through to tolerant text splitting for older or manually edited data.
+  }
+
+  return trimmed
+    .split(/[\n,，;；]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function showMessage(type, text) {
