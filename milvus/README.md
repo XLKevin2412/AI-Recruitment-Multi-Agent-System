@@ -2,6 +2,10 @@
 
 本工作区用于记录 Milvus collection、索引策略、字段规划和健康检查方式。
 
+## 当前状态
+
+RAG Service 已支持通过 `RAG_STORAGE_BACKEND=milvus` 写入和检索 Milvus；本地开发也可以使用 `auto` 或 `memory` 模式。
+
 ## 部署模式
 
 V1 本地使用 Milvus Standalone。
