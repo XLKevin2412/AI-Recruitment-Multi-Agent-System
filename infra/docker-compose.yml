@@ -192,6 +192,17 @@ services:
       python-agent-runtime:
         condition: service_started
 
+  frontend-admin:
+    build:
+      context: ../frontend/admin
+    container_name: ai-recruitment-frontend-admin
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_ADMIN_PORT:-3000}:80"
+    depends_on:
+      java-backend:
+        condition: service_started
+
 networks:
   default:
     name: ai-recruitment-network

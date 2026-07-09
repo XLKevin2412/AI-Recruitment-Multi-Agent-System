@@ -4,11 +4,12 @@
 
 ### 项目简介
 
-AI 招聘多智能体系统是在开源招聘 Demo 基础上的二次开发项目，目标是将单体演示升级为可本地运行的招聘辅助系统。项目采用 Java Backend、Python Agent Runtime 和 RAG Service 三层架构，接入 DeepSeek API、Milvus、Redis 和 Docker Compose，实现简历解析、人岗匹配分析、邮件草稿生成、面试建议和招聘问答流程闭环。
+AI 招聘多智能体系统是在开源招聘 Demo 基础上的二次开发项目，目标是将单体演示升级为可本地运行的招聘辅助系统。项目采用 Vue Admin、Java Backend、Python Agent Runtime 和 RAG Service 分层架构，接入 DeepSeek API、Milvus、Redis 和 Docker Compose，实现简历解析、人岗匹配分析、邮件草稿生成、面试建议和招聘问答流程闭环。
 
 ### 核心能力
 
 - 招聘流程编排：Java Backend 统一管理岗位、候选人、申请、简历、分析报告、邮件草稿和面试建议。
+- Vue 管理端：提供可视化工作台，支持创建岗位、候选人、申请记录，上传简历，触发分析并查看 Agent 输出。
 - Agent Runtime：通过 FastAPI 封装简历分析、沟通生成、面试建议和招聘问答能力，支持 DeepSeek JSON 结构化输出和规则化 fallback。
 - RAG 检索增强：支持文本切分、向量化、Milvus/内存双存储模式和相似度检索，为 Agent 提供岗位与简历证据上下文。
 - 向量检索底座：基于 Milvus collection 存储招聘知识片段，使用 HNSW + COSINE 索引，并支持来源类型、申请 ID 和岗位 ID 过滤。
@@ -17,6 +18,7 @@ AI 招聘多智能体系统是在开源招聘 Demo 基础上的二次开发项�
 ### 技术栈
 
 - Backend: Java, Spring Boot, Spring Data JPA
+- Frontend: Vue 3, Vite
 - AI Runtime: Python, FastAPI, DeepSeek API, Pydantic, httpx
 - RAG: Milvus, vector search, deterministic local embedding
 - Infrastructure: MySQL, Redis, Docker Compose
@@ -25,6 +27,9 @@ AI 招聘多智能体系统是在开源招聘 Demo 基础上的二次开发项�
 ### 服务结构
 
 ```text
+Vue Admin
+  -> Java Backend: browser-facing API
+
 Java Backend
   -> MySQL: business data
   -> Redis: cache
@@ -64,6 +69,14 @@ DEEPSEEK_TIMEOUT_SECONDS=30
 docker compose --env-file .env up -d
 ```
 
+4. 打开管理端页面：
+
+```text
+http://localhost:3000
+```
+
+页面操作顺序为：创建岗位 -> 创建候选人 -> 创建申请 -> 上传简历 -> 触发分析 -> 查看邮件草稿、面试建议和招聘问答。
+
 ### 测试
 
 ```powershell
@@ -87,11 +100,12 @@ mvn test
 
 ### Overview
 
-AI Recruitment Multi-Agent System is a secondary development project based on an open-source recruitment demo. It upgrades the original demo into a locally runnable recruitment assistance system with a Java Backend, a Python Agent Runtime, and a RAG Service. The system integrates DeepSeek API, Milvus, Redis, and Docker Compose to support resume parsing, job-candidate matching analysis, email draft generation, interview suggestion generation, and recruitment Q&A.
+AI Recruitment Multi-Agent System is a secondary development project based on an open-source recruitment demo. It upgrades the original demo into a locally runnable recruitment assistance system with Vue Admin, a Java Backend, a Python Agent Runtime, and a RAG Service. The system integrates DeepSeek API, Milvus, Redis, and Docker Compose to support resume parsing, job-candidate matching analysis, email draft generation, interview suggestion generation, and recruitment Q&A.
 
 ### Key Features
 
 - Recruitment workflow orchestration: Java Backend manages jobs, candidates, applications, resumes, analysis reports, email drafts, and interview suggestions.
+- Vue Admin: provides a browser workspace for creating jobs, candidates, applications, uploading resumes, triggering analysis, and reviewing agent outputs.
 - Agent Runtime: FastAPI exposes resume analysis, communication drafting, interview suggestion, and recruitment Q&A capabilities with DeepSeek JSON output and rule-based fallback.
 - RAG enhancement: supports text chunking, vectorization, Milvus/memory storage modes, and similarity search to provide evidence context for agents.
 - Vector retrieval foundation: uses a Milvus collection with HNSW + COSINE index and metadata filters such as source type, application ID, and job position ID.
@@ -100,6 +114,7 @@ AI Recruitment Multi-Agent System is a secondary development project based on an
 ### Tech Stack
 
 - Backend: Java, Spring Boot, Spring Data JPA
+- Frontend: Vue 3, Vite
 - AI Runtime: Python, FastAPI, DeepSeek API, Pydantic, httpx
 - RAG: Milvus, vector search, deterministic local embedding
 - Infrastructure: MySQL, Redis, Docker Compose
@@ -108,6 +123,9 @@ AI Recruitment Multi-Agent System is a secondary development project based on an
 ### Architecture
 
 ```text
+Vue Admin
+  -> Java Backend: browser-facing API
+
 Java Backend
   -> MySQL: business data
   -> Redis: cache
@@ -146,6 +164,14 @@ DEEPSEEK_TIMEOUT_SECONDS=30
 ```powershell
 docker compose --env-file .env up -d
 ```
+
+4. Open the admin page:
+
+```text
+http://localhost:3000
+```
+
+Workflow: create a job -> create a candidate -> create an application -> upload a resume -> trigger analysis -> review email draft, interview suggestion, and recruitment Q&A.
 
 ### Tests
 

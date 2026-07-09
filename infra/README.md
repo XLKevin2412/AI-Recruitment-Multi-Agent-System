@@ -14,6 +14,7 @@
 - RAG Service：文档切分和向量检索服务。
 - Python Agent Runtime：智能体运行时服务。
 - Java Backend：招聘业务后端。
+- Frontend Admin：Vue 招聘管理端，用于创建岗位、候选人、申请记录，上传简历并触发 Agent 分析。
 
 ## 关键运行时配置
 
@@ -32,6 +33,14 @@ docker compose --env-file .env up -d
 
 如果只需要启动基础设施，也可以在 Compose 中指定单个服务或服务组。
 
+启动完成后访问：
+
+```text
+http://localhost:3000
+```
+
+页面通过 `/api` 代理访问 Java Backend；Python Agent Runtime 和 RAG Service 仍由 Java Backend 在后端内部调用。
+
 ## 健康检查
 
 ```powershell
@@ -45,6 +54,13 @@ docker compose ps
 - `etcd` healthy
 - `minio` healthy
 - `milvus` healthy
+
+业务服务预期状态：
+
+- `rag-service` running
+- `python-agent-runtime` running
+- `java-backend` running
+- `frontend-admin` running
 
 ## 停止服务
 
