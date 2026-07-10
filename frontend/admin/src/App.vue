@@ -350,7 +350,7 @@
 </template>
 
 <script setup>
-import { computed, markRaw, onMounted, reactive, ref, watch } from 'vue';
+import { computed, markRaw, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { formatEvidence, readAnalysisList } from './analysis-report.js';
 import {
   Bot,
@@ -433,6 +433,8 @@ const emailDraft = ref(null);
 const interviewPlan = ref(null);
 const qaQuestion = ref('这个候选人与岗位的匹配风险是什么？');
 const qaAnswer = ref(null);
+const HEALTH_RETRY_DELAY_MS = 3000;
+let healthRetryTimer = null;
 
 const healthClass = computed(() => {
   if (!health.value) return 'unknown';
@@ -464,6 +466,10 @@ watch(
 
 onMounted(async () => {
   await Promise.allSettled([loadHealth(), loadJobs(), loadCandidates(), loadApplications()]);
+});
+
+onUnmounted(() => {
+  clearHealthRetry();
 });
 
 function loadStoredState() {
@@ -548,10 +554,22 @@ async function runAction(label, action) {
 }
 
 async function loadHealth() {
+  clearHealthRetry();
   try {
     health.value = await apiFetch('/health');
   } catch (error) {
     health.value = { status: 'DOWN', error: error.message };
+    healthRetryTimer = setTimeout(() => {
+      healthRetryTimer = null;
+      loadHealth();
+    }, HEALTH_RETRY_DELAY_MS);
+  }
+}
+
+function clearHealthRetry() {
+  if (healthRetryTimer !== null) {
+    clearTimeout(healthRetryTimer);
+    healthRetryTimer = null;
   }
 }
 
