@@ -23,17 +23,17 @@
 
 ### 2. 系统架构
 
-    Vue Admin (browser)
-            |
-            v
-    Java Backend (/api)
-       |        |          |          |
-       v        v          v          v
-     MySQL   Redis   Agent Runtime  RAG Service
-                             |          |
-                             v          v
-                        DeepSeek     Milvus
-                        (optional)  (or memory)
+```mermaid
+flowchart TB
+    vue["Vue Admin<br/>浏览器"] -->|/api| backend["Java Backend<br/>业务编排"]
+    backend --> mysql["MySQL<br/>业务数据"]
+    backend --> redis["Redis<br/>缓存"]
+    backend --> agent["Python Agent Runtime<br/>简历解析与 Agent 能力"]
+    backend --> rag["RAG Service<br/>检索增强"]
+    agent -.->|可选模型调用| deepseek["DeepSeek API"]
+    rag -->|milvus 模式| milvus["Milvus<br/>向量检索"]
+    rag -.->|memory 或 auto 回退| memory["Memory Store"]
+```
 
 | 模块 | 主要职责 |
 | --- | --- |

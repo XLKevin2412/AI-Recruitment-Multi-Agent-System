@@ -23,17 +23,17 @@
 
 ### 3. Architecture
 
-    Vue Admin (browser)
-            |
-            v
-    Java Backend (/api)
-       |        |          |          |
-       v        v          v          v
-     MySQL   Redis   Agent Runtime  RAG Service
-                             |          |
-                             v          v
-                        DeepSeek     Milvus
-                        (optional)  (or memory)
+```mermaid
+flowchart TB
+    vue["Vue Admin<br/>Browser"] -->|/api| backend["Java Backend<br/>Business orchestration"]
+    backend --> mysql["MySQL<br/>Business data"]
+    backend --> redis["Redis<br/>Cache"]
+    backend --> agent["Python Agent Runtime<br/>Resume parsing and Agent capabilities"]
+    backend --> rag["RAG Service<br/>Retrieval augmentation"]
+    agent -.->|optional model call| deepseek["DeepSeek API"]
+    rag -->|milvus mode| milvus["Milvus<br/>Vector retrieval"]
+    rag -.->|memory or auto fallback| memory["Memory Store"]
+```
 
 | Module | Responsibility |
 | --- | --- |
