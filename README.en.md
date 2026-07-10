@@ -150,7 +150,7 @@ Run the frontend in development mode:
     npm install
     npm run dev
 
-Vite runs on http://localhost:3000 and proxies /api to http://localhost:8080. Start Java Backend first.
+Vite runs on `http://localhost:3000` and proxies `/api` to `http://localhost:8080`. Start Java Backend first.
 
 Run Java Backend separately:
 
