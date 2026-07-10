@@ -164,7 +164,7 @@ Python Agent Runtime 和 RAG Service 的内部接口由 Java Backend 调用，�
     npm install
     npm run dev
 
-Vite 开发服务器默认运行在 http://localhost:3000，并把 /api 代理到 http://localhost:8080。Java Backend 需要先启动。
+Vite 开发服务器默认运行在http://localhost:3000，并把/api代理到http://localhost:8080。Java Backend需要先启动。
 
 Java Backend 单独运行：
 
