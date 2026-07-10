@@ -1,12 +1,14 @@
 # AI Recruitment Multi-Agent System — English Version
 
-[中文版](README.md)
+---
 
-### 1. Project Overview
+[中文文档](README.md) | [English Documentation](README.en.md)
 
-AI Recruitment Multi-Agent System is a locally runnable recruitment-assistance system built as a secondary development of an open-source recruitment demo. It uses a Vue 3 admin workspace, a Spring Boot business backend, a FastAPI Agent Runtime, and a RAG Service.
+> A locally runnable AI recruitment-assistance system built as a secondary development of an open-source recruitment demo, using a Vue 3 admin workspace, a Spring Boot business backend, a FastAPI Agent Runtime, and a RAG Service.
 
 > Positioning: secondary development / architecture optimization. The current version is intended for local demos, API integration, and engineering practice. It is not an enterprise SaaS product with a complete production authorization model.
+
+### 1. Project Overview
 
 ### 2. Capabilities
 

@@ -1,8 +1,10 @@
 # AI Recruitment Multi-Agent System
 
-[English Version](README.en.md)
+---
 
-一个面向本地开发与演示的 AI 招聘辅助系统。项目是在开源招聘 Demo 基础上的二次开发，采用 Vue 3 管理端、Spring Boot 业务后端、FastAPI Agent Runtime 和 RAG Service 分层实现招聘流程闭环。
+[中文文档](README.md) | [English Documentation](README.en.md)
+
+> 一个面向本地开发与演示的 AI 招聘辅助系统。项目是在开源招聘 Demo 基础上的二次开发，采用 Vue 3 管理端、Spring Boot 业务后端、FastAPI Agent Runtime 和 RAG Service 分层实现招聘流程闭环。
 
 > 项目定位：secondary development / architecture optimization。当前版本适合本地演示、接口联调和工程实践，不等同于已经具备企业级生产权限体系的 SaaS 产品。
 
