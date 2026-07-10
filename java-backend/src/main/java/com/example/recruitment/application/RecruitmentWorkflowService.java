@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,6 +40,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class RecruitmentWorkflowService {
+
+    static final long MAX_RESUME_SIZE_BYTES = 10L * 1024 * 1024;
+    private static final byte[] PDF_SIGNATURE = { '%', 'P', 'D', 'F', '-' };
 
     private final JobApplicationRepository applicationRepository;
     private final ResumeRepository resumeRepository;
@@ -86,15 +90,23 @@ public class RecruitmentWorkflowService {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Resume file is required");
         }
-        String fileName = file.getOriginalFilename() == null ? "resume.pdf" : file.getOriginalFilename();
-        if (!fileName.toLowerCase().endsWith(".pdf")) {
+        if (file.getSize() > MAX_RESUME_SIZE_BYTES) {
+            throw new BadRequestException("Resume file must not exceed 10 MiB");
+        }
+
+        String fileName = sanitizeFileName(file.getOriginalFilename());
+        if (!fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
             throw new BadRequestException("Only PDF resumes are supported");
+        }
+
+        byte[] content = file.getBytes();
+        if (!hasPdfSignature(content)) {
+            throw new BadRequestException("Uploaded file is not a valid PDF");
         }
 
         Files.createDirectories(resumeStorageDir);
         String resumeId = UUID.randomUUID().toString();
         Path storagePath = resumeStorageDir.resolve(resumeId + ".pdf");
-        byte[] content = file.getBytes();
         Files.write(storagePath, content);
 
         String traceId = UUID.randomUUID().toString();
@@ -119,6 +131,44 @@ public class RecruitmentWorkflowService {
         application.setCurrentStage(application.getStatus().name());
         applicationRepository.save(application);
         return new ResumeUploadResponse(resume.getId(), resume.getParseStatus(), application.getStatus());
+    }
+
+    private static String sanitizeFileName(String originalFileName) {
+        if (originalFileName == null || originalFileName.isBlank()) {
+            return "resume.pdf";
+        }
+        String normalized = originalFileName.replace('\\', '/');
+        String fileName = normalized.substring(normalized.lastIndexOf('/') + 1)
+                .replaceAll("\\p{Cntrl}", "_")
+                .trim();
+        if (fileName.isBlank()) {
+            return "resume.pdf";
+        }
+        if (fileName.length() > 255) {
+            String extension = fileName.toLowerCase(Locale.ROOT).endsWith(".pdf") ? ".pdf" : "";
+            return fileName.substring(0, 255 - extension.length()) + extension;
+        }
+        return fileName;
+    }
+
+    private static boolean hasPdfSignature(byte[] content) {
+        if (content.length < PDF_SIGNATURE.length) {
+            return false;
+        }
+        int lastStart = Math.min(content.length - PDF_SIGNATURE.length, 1024 - PDF_SIGNATURE.length);
+        for (int start = 0; start <= lastStart; start++) {
+            boolean matches = true;
+            for (int offset = 0; offset < PDF_SIGNATURE.length; offset++) {
+                if (content[start + offset] != PDF_SIGNATURE[offset]) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Transactional

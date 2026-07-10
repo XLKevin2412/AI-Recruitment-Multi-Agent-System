@@ -254,7 +254,7 @@
               <article v-for="section in analysisSections" :key="section.key" class="analysis-card">
                 <h3>{{ section.title }}</h3>
                 <ul v-if="section.items.length" class="analysis-list">
-                  <li v-for="item in section.items" :key="item">{{ item }}</li>
+                  <li v-for="(item, index) in section.items" :key="`${section.key}-${index}`">{{ item }}</li>
                 </ul>
                 <p v-else class="empty-text">暂无</p>
               </article>
@@ -351,6 +351,7 @@
 
 <script setup>
 import { computed, markRaw, onMounted, reactive, ref, watch } from 'vue';
+import { formatEvidence, readAnalysisList } from './analysis-report.js';
 import {
   Bot,
   BriefcaseBusiness,
@@ -444,15 +445,15 @@ const healthLabel = computed(() => {
 });
 
 const analysisSections = computed(() => [
-  { key: 'matched', title: '匹配技能', items: parseListField(analysisReport.value?.matchedSkillsJson) },
-  { key: 'missing', title: '缺失技能', items: parseListField(analysisReport.value?.missingSkillsJson) },
-  { key: 'strengths', title: '项目优势', items: parseListField(analysisReport.value?.strengthsJson) },
-  { key: 'risks', title: '风险点', items: parseListField(analysisReport.value?.risksJson) }
+  { key: 'matched', title: '匹配技能', items: readAnalysisList(analysisReport.value, 'matchedSkills') },
+  { key: 'missing', title: '缺失技能', items: readAnalysisList(analysisReport.value, 'missingSkills') },
+  { key: 'strengths', title: '项目优势', items: readAnalysisList(analysisReport.value, 'strengths') },
+  { key: 'risks', title: '风险点', items: readAnalysisList(analysisReport.value, 'risks') }
 ]);
 
 const evidenceText = computed(() => {
-  const ids = parseListField(analysisReport.value?.ragEvidenceIdsJson);
-  return ids.length ? ids.join('、') : '暂无可展示证据 ID';
+  const evidence = formatEvidence(analysisReport.value);
+  return evidence.length ? evidence.join('；') : '暂无可展示证据';
 });
 
 watch(
@@ -467,7 +468,16 @@ onMounted(async () => {
 
 function loadStoredState() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if (!state || typeof state !== 'object' || Array.isArray(state)) return {};
+
+    // Candidate PII must not persist in browser storage. Remove the legacy field
+    // during hydration so upgrades also clean data saved by older builds.
+    if (Object.prototype.hasOwnProperty.call(state, 'candidateForm')) {
+      delete state.candidateForm;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    return state;
   } catch {
     return {};
   }
@@ -481,8 +491,7 @@ function saveStoredState() {
       selectedJobId: selectedJobId.value,
       selectedCandidateId: selectedCandidateId.value,
       selectedApplicationId: selectedApplicationId.value,
-      jobForm: { ...jobForm },
-      candidateForm: { ...candidateForm }
+      jobForm: { ...jobForm }
     })
   );
 }
@@ -516,32 +525,6 @@ function asArray(text) {
 
 function pretty(value) {
   return JSON.stringify(value, null, 2);
-}
-
-function parseListField(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.map(String).filter(Boolean);
-  if (typeof value !== 'string') return [String(value)].filter(Boolean);
-
-  const trimmed = value.trim();
-  if (!trimmed) return [];
-
-  try {
-    const parsed = JSON.parse(trimmed);
-    if (Array.isArray(parsed)) {
-      return parsed.map(String).map((item) => item.trim()).filter(Boolean);
-    }
-    if (typeof parsed === 'string') {
-      return parsed.trim() ? [parsed.trim()] : [];
-    }
-  } catch {
-    // Fall through to tolerant text splitting for older or manually edited data.
-  }
-
-  return trimmed
-    .split(/[\n,，;；]+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function showMessage(type, text) {

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.is;
@@ -14,6 +15,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.emptyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -107,6 +109,57 @@ class AiRecruitmentBackendApplicationTests {
                                 """.formatted(jobId, candidateId)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is("Resume not found: missing-resume")));
+    }
+
+    @Test
+    void uploadResumeRejectsPdfExtensionWithInvalidContent() throws Exception {
+        String jobId = createJob("Invalid PDF Job");
+        String candidateId = createCandidate("invalid-pdf");
+        String applicationId = createApplication(jobId, candidateId);
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "resume.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                "this is not a PDF".getBytes());
+
+        mockMvc.perform(multipart("/applications/{id}/resume", applicationId).file(file))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Uploaded file is not a valid PDF")));
+    }
+
+    @Test
+    void uploadResumeRejectsOversizedFileBeforeParsing() throws Exception {
+        String jobId = createJob("Oversized PDF Job");
+        String candidateId = createCandidate("oversized-pdf");
+        String applicationId = createApplication(jobId, candidateId);
+        byte[] content = new byte[10 * 1024 * 1024 + 1];
+        System.arraycopy("%PDF-".getBytes(), 0, content, 0, 5);
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "resume.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                content);
+
+        mockMvc.perform(multipart("/applications/{id}/resume", applicationId).file(file))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Resume file must not exceed 10 MiB")));
+    }
+
+    @Test
+    void uploadResumeDoesNotTurnLongNonPdfNameIntoPdf() throws Exception {
+        String jobId = createJob("Long Filename Job");
+        String candidateId = createCandidate("long-filename");
+        String applicationId = createApplication(jobId, candidateId);
+        String fileName = "a".repeat(260) + ".exe";
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                fileName,
+                MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                "%PDF-1.7".getBytes());
+
+        mockMvc.perform(multipart("/applications/{id}/resume", applicationId).file(file))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Only PDF resumes are supported")));
     }
 
     private String createJob(String title) throws Exception {

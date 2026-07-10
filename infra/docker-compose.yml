@@ -12,7 +12,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${BIND_ADDRESS:-127.0.0.1}:${MYSQL_PORT:-3306}:3306"
     volumes:
       - ./data/mysql:/var/lib/mysql
       - ../mysql/init:/docker-entrypoint-initdb.d:ro
@@ -40,7 +40,7 @@ services:
           redis-server --appendonly yes
         fi
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - ./data/redis:/data
     healthcheck:
@@ -68,7 +68,7 @@ services:
       - --listen-client-urls=http://0.0.0.0:2379
       - --data-dir=/etcd
     ports:
-      - "${ETCD_PORT:-2379}:2379"
+      - "${BIND_ADDRESS:-127.0.0.1}:${ETCD_PORT:-2379}:2379"
     volumes:
       - ./data/etcd:/etcd
     healthcheck:
@@ -87,8 +87,8 @@ services:
       TZ: ${TZ:-Asia/Shanghai}
     command: server /data --console-address ":9001"
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "${BIND_ADDRESS:-127.0.0.1}:${MINIO_API_PORT:-9000}:9000"
+      - "${BIND_ADDRESS:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - ./data/minio:/data
     healthcheck:
@@ -109,8 +109,8 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
-      - "${MILVUS_GRPC_PORT:-19530}:19530"
-      - "${MILVUS_HTTP_PORT:-9091}:9091"
+      - "${BIND_ADDRESS:-127.0.0.1}:${MILVUS_GRPC_PORT:-19530}:19530"
+      - "${BIND_ADDRESS:-127.0.0.1}:${MILVUS_HTTP_PORT:-9091}:9091"
     volumes:
       - ./data/milvus:/var/lib/milvus
     depends_on:
@@ -140,7 +140,7 @@ services:
       RAG_CHUNK_OVERLAP: ${RAG_CHUNK_OVERLAP:-120}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
-      - "${RAG_SERVICE_PORT:-8200}:8200"
+      - "${BIND_ADDRESS:-127.0.0.1}:${RAG_SERVICE_PORT:-8200}:8200"
     depends_on:
       milvus:
         condition: service_healthy
@@ -157,7 +157,7 @@ services:
       DEEPSEEK_TIMEOUT_SECONDS: ${DEEPSEEK_TIMEOUT_SECONDS:-30}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
-      - "${PYTHON_AGENT_RUNTIME_PORT:-8100}:8100"
+      - "${BIND_ADDRESS:-127.0.0.1}:${PYTHON_AGENT_RUNTIME_PORT:-8100}:8100"
 
   java-backend:
     build:
@@ -179,7 +179,7 @@ services:
       RESUME_STORAGE_DIR: /app/data/resumes
       TZ: ${TZ:-Asia/Shanghai}
     ports:
-      - "${JAVA_BACKEND_PORT:-8080}:8080"
+      - "${BIND_ADDRESS:-127.0.0.1}:${JAVA_BACKEND_PORT:-8080}:8080"
     volumes:
       - ./data/resumes:/app/data/resumes
     depends_on:
@@ -198,7 +198,7 @@ services:
     container_name: ai-recruitment-frontend-admin
     restart: unless-stopped
     ports:
-      - "${FRONTEND_ADMIN_PORT:-3000}:80"
+      - "${BIND_ADDRESS:-127.0.0.1}:${FRONTEND_ADMIN_PORT:-3000}:80"
     depends_on:
       java-backend:
         condition: service_started

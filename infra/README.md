@@ -18,6 +18,7 @@
 
 ## 关键运行时配置
 
+- `BIND_ADDRESS=127.0.0.1`：所有宿主机发布端口默认只允许本机访问，避免数据库、向量库和内部 Agent 接口暴露到局域网。
 - `RAG_STORAGE_BACKEND=milvus`：Compose 默认让 RAG Service 使用 Milvus；本地单独开发可改为 `auto` 或 `memory`。
 - `MILVUS_COLLECTION=recruitment_knowledge_chunks`：RAG 片段统一写入该 collection，通过来源类型和业务 ID 过滤。
 - `DEEPSEEK_MODEL=deepseek-v4-flash`：Python Agent Runtime 默认模型；未配置 `DEEPSEEK_API_KEY` 时自动使用规则化 fallback。
@@ -40,6 +41,14 @@ http://localhost:3000
 ```
 
 页面通过 `/api` 代理访问 Java Backend；Python Agent Runtime 和 RAG Service 仍由 Java Backend 在后端内部调用。
+
+## 安全边界
+
+- 当前管理端是本地开发与演示工作区，尚未实现用户登录、角色权限和租户隔离，不应直接作为公网服务部署。
+- 不要把 `BIND_ADDRESS` 改成 `0.0.0.0` 来临时开放服务。共享环境应只通过带 TLS、身份认证和访问控制的反向代理暴露前端与 Java Backend；MySQL、Redis、etcd、MinIO、Milvus、RAG Service 和 Python Agent Runtime 应保持在私有网络。
+- 管理端浏览器存储只保留当前选择状态和岗位草稿，不保留候选人姓名、邮箱、手机号等 PII；共享电脑使用完应清理浏览器站点数据。
+- 从 `.env.example` 创建 `.env` 后，应替换 MySQL、Redis、MinIO 等示例口令；`.env` 只能保留在本机，不能提交到 Git。
+- Java Backend 对简历上传执行 10 MiB 大小限制、PDF 扩展名与 PDF 文件头校验。该校验用于降低伪装文件和解析资源滥用风险，不等同于恶意文档查杀；生产环境仍建议增加病毒扫描和隔离解析。
 
 ## 健康检查
 
