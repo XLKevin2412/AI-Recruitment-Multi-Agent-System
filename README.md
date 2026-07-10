@@ -1,205 +1,236 @@
 # AI Recruitment Multi-Agent System
 
+[English Version](README.en.md)
+
+一个面向本地开发与演示的 AI 招聘辅助系统。项目是在开源招聘 Demo 基础上的二次开发，采用 Vue 3 管理端、Spring Boot 业务后端、FastAPI Agent Runtime 和 RAG Service 分层实现招聘流程闭环。
+
+> 项目定位：secondary development / architecture optimization。当前版本适合本地演示、接口联调和工程实践，不等同于已经具备企业级生产权限体系的 SaaS 产品。
+
 ## 中文版
 
-### 项目简介
+### 1. 项目能力
 
-AI 招聘多智能体系统是在开源招聘 Demo 基础上的二次开发项目，目标是将单体演示升级为可本地运行的招聘辅助系统。项目采用 Vue Admin、Java Backend、Python Agent Runtime 和 RAG Service 分层架构，支持接入 DeepSeek API，并使用 Milvus、Redis 和 Docker Compose，实现简历解析、人岗匹配分析、邮件草稿生成、面试建议和招聘问答流程闭环；未配置 DeepSeek 凭据时，Agent Runtime 会使用规则化 fallback。
+- 招聘流程：创建岗位、候选人和申请记录，上传简历并触发分析。
+- 简历处理：后端限制上传文件不超过 10 MiB，并校验 PDF 扩展名和文件头；Python 服务负责解析文本。
+- Agent 能力：简历分析、人岗匹配、邮件草稿、面试建议和招聘问答。
+- 模型接入：通过 OpenAI-compatible chat/completions 调用 DeepSeek，并要求 JSON 结构化输出；未配置 API Key、调用失败或返回内容校验失败时，自动使用规则化 fallback。
+- RAG 检索：支持文本切分、确定性本地 embedding、相似度检索，以及 milvus、memory、auto 三种存储模式。
+- Milvus 检索：Milvus 模式使用 HNSW + COSINE 索引，并支持来源类型、申请 ID 和岗位 ID 过滤。
+- 结果输出：展示分析报告、证据、邮件草稿、面试建议和问答结果；邮件只生成草稿，不会自动发送。
+- 本地部署：Docker Compose 编排 MySQL、Redis、etcd、MinIO、Milvus、RAG Service、Python Agent Runtime、Java Backend 和 Vue Admin。
 
-### 核心能力
+### 2. 系统架构
 
-- 招聘流程编排：Java Backend 统一管理岗位、候选人、申请、简历、分析报告、邮件草稿和面试建议。
-- Vue 管理端：提供可视化工作台，支持创建岗位、候选人、申请记录，上传简历，触发分析并查看 Agent 输出。
-- Agent Runtime：通过 FastAPI 封装简历分析、沟通生成、面试建议和招聘问答能力，支持 DeepSeek JSON 结构化输出和规则化 fallback。
-- RAG 检索增强：支持文本切分、向量化、Milvus/内存双存储模式（`auto` 模式可在 Milvus 不可用时回退）和相似度检索，为 Agent 提供岗位与简历证据上下文。
-- 向量检索底座：Milvus 模式下基于 collection 存储招聘知识片段，使用 HNSW + COSINE 索引，并支持来源类型、申请 ID 和岗位 ID 过滤；内存模式用于本地回退。
-- 本地工程化部署：通过 Docker Compose 编排 MySQL、Redis、Milvus、RAG Service、Python Agent Runtime、Java Backend 和 Vue Admin。
+    Vue Admin (browser)
+            |
+            v
+    Java Backend (/api)
+       |        |          |          |
+       v        v          v          v
+     MySQL   Redis   Agent Runtime  RAG Service
+                             |          |
+                             v          v
+                        DeepSeek     Milvus
+                        (optional)  (or memory)
 
-### 技术栈
+| 模块 | 主要职责 |
+| --- | --- |
+| frontend/admin | Vue 管理工作台、流程操作和结果展示 |
+| java-backend | 业务数据、状态流转、文件上传、缓存和服务编排 |
+| python-agent-runtime | 简历解析、Agent 调用、结构化结果和 fallback |
+| rag-service | 文本切分、embedding、向量写入和检索 |
+| MySQL | 岗位、候选人、申请、简历、报告、草稿和面试建议持久化 |
+| Redis | 缓存、最新分析结果和流程辅助状态 |
+| Milvus | 招聘知识片段和简历证据的向量检索 |
 
-- Backend: Java, Spring Boot, Spring Data JPA
-- Frontend: Vue 3, Vite
-- AI Runtime: Python, FastAPI, DeepSeek API, Pydantic, httpx
-- RAG: Milvus, vector search, deterministic local embedding
-- Infrastructure: MySQL, Redis, Docker Compose
-- Testing: JUnit, pytest
+### 3. 目录结构
 
-### 服务结构
+    frontend/admin/        Vue 3 + Vite 管理端
+    java-backend/          Spring Boot 业务后端
+    python-agent-runtime/  FastAPI Agent Runtime
+    rag-service/           FastAPI RAG Service
+    infra/                 Docker Compose、环境变量示例和运行数据目录
+    mysql/                 数据库初始化脚本
+    milvus/                Milvus 配置说明
+    redis/                 Redis 使用说明
+    docs/                  设计、接口契约和实施记录
 
-```text
-Vue Admin
-  -> Java Backend: browser-facing API
+### 4. 环境要求
 
-Java Backend
-  -> MySQL: business data
-  -> Redis: cache
-  -> Python Agent Runtime: agent capabilities
-  -> RAG Service: evidence retrieval
+推荐使用 Docker Compose 启动完整环境：
 
-Python Agent Runtime
-  -> DeepSeek API: structured LLM output
-  -> rule-based fallback
+- Docker Desktop，支持 Docker Compose。
+- Windows PowerShell。
 
-RAG Service
-  -> Milvus: vector storage and retrieval
-  -> memory store: local fallback
-```
+如需单独开发模块：
 
-### 本地运行
+- Node.js 20+，用于 Vue Admin。
+- Java 17、Maven，用于 Java Backend。
+- Python 3.11，仓库 Dockerfile 使用 Python 3.11；本地测试使用仓库根目录的 .venv。
 
-1. 复制环境变量文件：
+### 5. 快速启动
 
-```powershell
-cd infra
-copy .env.example .env
-```
+    cd infra
+    copy .env.example .env
 
-2. 在 `infra/.env` 中配置 DeepSeek API Key：
+编辑 infra/.env：
 
-```env
-DEEPSEEK_API_KEY=your_api_key
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-v4-flash
-DEEPSEEK_TIMEOUT_SECONDS=30
-```
+    # 可选。留空时 Agent Runtime 使用规则化 fallback。
+    DEEPSEEK_API_KEY=
+    DEEPSEEK_BASE_URL=https://api.deepseek.com
+    DEEPSEEK_MODEL=deepseek-v4-flash
+    DEEPSEEK_TIMEOUT_SECONDS=30
 
-3. 启动服务：
+    # 默认只绑定本机，避免数据库和内部服务暴露到局域网。
+    BIND_ADDRESS=127.0.0.1
 
-```powershell
-docker compose --env-file .env up -d
-```
+启动全部服务：
 
-4. 打开管理端页面：
+    docker compose --env-file .env up -d --build
+    docker compose --env-file .env ps
 
-```text
-http://localhost:3000
-```
+打开管理端：
 
-页面操作顺序为：创建岗位 -> 创建候选人 -> 创建申请 -> 上传简历 -> 触发分析 -> 查看邮件草稿、面试建议和招聘问答。
+    http://localhost:3000
 
-### 测试
+检查后端健康状态：
 
-```powershell
-cd frontend/admin
-npm test
-npm run build
+    Invoke-WebRequest -UseBasicParsing http://localhost:3000/api/health
 
-cd ..\..\python-agent-runtime
-..\.venv\Scripts\python.exe -m pytest -q
+预期响应包含 service、status 和 MySQL/Redis 状态：
 
-cd ..\rag-service
-..\.venv\Scripts\python.exe -m pytest -q
+    {
+      "service": "ai-recruitment-backend",
+      "status": "UP",
+      "components": {
+        "mysql": "UP",
+        "redis": "UP"
+      }
+    }
 
-cd ..\java-backend
-mvn test
-```
+停止服务：
 
-### 当前边界
+    docker compose --env-file .env down
 
-- 当前版本已完成 V1 本地闭环；DeepSeek 路径支持真实调用，但是否使用真实模型取决于 `DEEPSEEK_API_KEY` 和运行环境，未配置凭据或调用失败时会自动 fallback。仓库中的 Agent 测试使用模拟客户端，真实 Provider smoke test 需要按环境单独执行。
-- 面试能力当前是“面试建议生成”，未直接创建真实日历事件或会议链接。
-- 当前管理端是本地开发与演示工作区，未实现登录、角色权限和租户隔离，不应直接作为公网服务部署。
-- Java Backend 对简历上传执行 10 MiB 大小限制和 PDF 扩展名、文件头校验；这不等同于恶意文档查杀，生产环境仍需增加病毒扫描和隔离解析。
-- 项目未提供召回准确率、成本下降比例等评测指标；相关指标需要后续评测集和基准脚本支持。
+查看日志：
 
-## English Version
+    docker compose --env-file .env logs -f java-backend frontend-admin
 
-### Overview
+### 6. 管理端操作流程
 
-AI Recruitment Multi-Agent System is a secondary development project based on an open-source recruitment demo. It upgrades the original demo into a locally runnable recruitment assistance system with Vue Admin, a Java Backend, a Python Agent Runtime, and a RAG Service. The system supports the DeepSeek API and uses Milvus, Redis, and Docker Compose to provide resume parsing, job-candidate matching analysis, email draft generation, interview suggestion generation, and recruitment Q&A. When DeepSeek credentials are not configured, the Agent Runtime uses a rule-based fallback.
+    创建岗位
+      -> 创建候选人
+      -> 创建申请
+      -> 上传 PDF 简历
+      -> 触发简历分析
+      -> 查看分析报告和证据
+      -> 生成邮件草稿 / 面试建议 / 招聘问答
 
-### Key Features
+首次启动时，如果 Java Backend 需要等待 MySQL、Redis、RAG Service 或 Agent Runtime，前端会显示暂时不可用并自动重试健康检查。
 
-- Recruitment workflow orchestration: Java Backend manages jobs, candidates, applications, resumes, analysis reports, email drafts, and interview suggestions.
-- Vue Admin: provides a browser workspace for creating jobs, candidates, applications, uploading resumes, triggering analysis, and reviewing agent outputs.
-- Agent Runtime: FastAPI exposes resume analysis, communication drafting, interview suggestion, and recruitment Q&A capabilities with DeepSeek JSON output and rule-based fallback.
-- RAG enhancement: supports text chunking, vectorization, Milvus/memory storage modes (`auto` can fall back when Milvus is unavailable), and similarity search to provide evidence context for agents.
-- Vector retrieval foundation: in Milvus mode, uses a collection with an HNSW + COSINE index and metadata filters such as source type, application ID, and job position ID; memory mode is available as a local fallback.
-- Local deployment: Docker Compose orchestrates MySQL, Redis, Milvus, RAG Service, Python Agent Runtime, Java Backend, and Vue Admin.
+### 7. 主要 API
 
-### Tech Stack
+Java Backend 默认上下文路径为 /api：
 
-- Backend: Java, Spring Boot, Spring Data JPA
-- Frontend: Vue 3, Vite
-- AI Runtime: Python, FastAPI, DeepSeek API, Pydantic, httpx
-- RAG: Milvus, vector search, deterministic local embedding
-- Infrastructure: MySQL, Redis, Docker Compose
-- Testing: JUnit, pytest
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | /api/health | 业务健康检查，包含 MySQL 和 Redis 状态 |
+| GET | /api/actuator/health | Spring Boot Actuator 健康检查 |
+| GET | /api/job-templates | 查询岗位模板 |
+| GET/POST | /api/jobs | 查询或创建岗位 |
+| GET/PUT/DELETE | /api/jobs/{id} | 查询、更新或删除岗位 |
+| GET/POST | /api/candidates | 查询或创建候选人 |
+| GET/PUT/DELETE | /api/candidates/{id} | 查询、更新或删除候选人 |
+| GET/POST | /api/applications | 查询或创建申请 |
+| GET/PUT/DELETE | /api/applications/{id} | 查询、更新或删除申请 |
+| POST | /api/applications/{id}/resume | 上传并解析 PDF 简历 |
+| POST | /api/applications/{id}/analysis | 触发简历分析 |
+| GET | /api/applications/{id}/analysis | 查询最新分析报告 |
+| POST | /api/applications/{id}/emails/draft | 生成邮件草稿 |
+| GET | /api/applications/{id}/emails | 查询邮件草稿 |
+| POST | /api/applications/{id}/interviews/propose | 生成面试建议 |
+| GET | /api/applications/{id}/interviews | 查询面试建议 |
+| POST | /api/applications/{id}/qa | 招聘问答 |
 
-### Architecture
+Python Agent Runtime 和 RAG Service 的内部接口由 Java Backend 调用，不建议直接暴露到公网。
 
-```text
-Vue Admin
-  -> Java Backend: browser-facing API
+### 8. 本地开发
 
-Java Backend
-  -> MySQL: business data
-  -> Redis: cache
-  -> Python Agent Runtime: agent capabilities
-  -> RAG Service: evidence retrieval
+前端开发模式：
 
-Python Agent Runtime
-  -> DeepSeek API: structured LLM output
-  -> rule-based fallback
+    cd frontend/admin
+    npm install
+    npm run dev
 
-RAG Service
-  -> Milvus: vector storage and retrieval
-  -> memory store: local fallback
-```
+Vite 开发服务器默认运行在 http://localhost:3000，并把 /api 代理到 http://localhost:8080。Java Backend 需要先启动。
 
-### Local Setup
+Java Backend 单独运行：
 
-1. Copy the environment file:
+    cd java-backend
+    # 先将 MYSQL_*、REDIS_* 等变量设置为 infra/.env 中的实际值。
+    # 变量说明见 java-backend/README.md。
+    mvn spring-boot:run
 
-```powershell
-cd infra
-copy .env.example .env
-```
+Python 服务单独运行：
 
-2. Configure the DeepSeek API key in `infra/.env`:
+    cd python-agent-runtime
+    ..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8100
 
-```env
-DEEPSEEK_API_KEY=your_api_key
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-v4-flash
-DEEPSEEK_TIMEOUT_SECONDS=30
-```
+    cd ..\rag-service
+    ..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8200
 
-3. Start services:
+### 9. 测试与验证
 
-```powershell
-docker compose --env-file .env up -d
-```
+从仓库根目录执行：
 
-4. Open the admin page:
+    cd frontend/admin
+    npm test
+    npm run build
 
-```text
-http://localhost:3000
-```
+    cd ..\..\python-agent-runtime
+    ..\.venv\Scripts\python.exe -m pytest -q
 
-Workflow: create a job -> create a candidate -> create an application -> upload a resume -> trigger analysis -> review email draft, interview suggestion, and recruitment Q&A.
+    cd ..\rag-service
+    ..\.venv\Scripts\python.exe -m pytest -q
 
-### Tests
+    cd ..\java-backend
+    mvn test
 
-```powershell
-cd frontend/admin
-npm test
-npm run build
+当前测试覆盖前端报告字段解析、Agent fallback/结构化响应、RAG 内存检索和 Java Backend API/集成客户端。真实 DeepSeek smoke test 需要配置有效 DEEPSEEK_API_KEY，不属于默认离线测试的一部分。
 
-cd ..\..\python-agent-runtime
-..\.venv\Scripts\python.exe -m pytest -q
+### 10. 配置说明
 
-cd ..\rag-service
-..\.venv\Scripts\python.exe -m pytest -q
+主要环境变量位于 infra/.env.example：
 
-cd ..\java-backend
-mvn test
-```
+| 变量 | 用途 |
+| --- | --- |
+| BIND_ADDRESS | 宿主机端口绑定地址，默认 127.0.0.1 |
+| DEEPSEEK_API_KEY | DeepSeek 凭据；为空时使用 fallback |
+| DEEPSEEK_BASE_URL | OpenAI-compatible API 地址 |
+| DEEPSEEK_MODEL | 模型名称 |
+| DEEPSEEK_TIMEOUT_SECONDS | 单次模型调用超时 |
+| RAG_STORAGE_BACKEND | milvus、memory 或 auto |
+| MILVUS_COLLECTION | Milvus collection 名称 |
+| EMBEDDING_DIMENSION | 当前确定性 embedding 维度，默认 128 |
+| RAG_CHUNK_SIZE | 文本分片大小，默认 700 |
+| RAG_CHUNK_OVERLAP | 分片重叠大小，默认 120 |
+| RESUME_STORAGE_DIR | 简历文件存储目录 |
 
-### Current Scope
+### 11. 安全边界与已知限制
 
-- The current version provides a V1 local workflow. The DeepSeek path supports real-provider calls, but actual model use depends on `DEEPSEEK_API_KEY` and the runtime environment; missing credentials or failed calls trigger the rule-based fallback. Repository Agent tests use a mocked client, while a real-provider smoke test must be run separately in the target environment.
-- Interview capability currently generates interview suggestions; it does not directly create calendar events or meeting links.
-- The admin workspace is intended for local development and demos; authentication, role-based authorization, and tenant isolation are not implemented, so it must not be exposed directly to the public internet.
-- Java Backend limits resume uploads to 10 MiB and validates the PDF extension and file signature. This is not malware scanning; production deployments still need antivirus scanning and isolated document parsing.
-- Metrics such as recall accuracy or cost reduction are not claimed because they require a dedicated evaluation dataset and benchmark scripts.
+- 管理端当前面向本地开发和演示，未实现登录、角色权限和租户隔离，不应直接作为公网服务部署。
+- 默认所有宿主机端口只绑定 127.0.0.1。不要为了临时联调直接改成 0.0.0.0；共享环境应通过带 TLS、身份认证和访问控制的反向代理暴露服务。
+- .env、API Key 和数据库口令只保留在本机，不要提交到 Git；示例口令必须在共享环境中替换。
+- 管理端只持久化当前选择状态和岗位草稿，不持久化候选人姓名、邮箱和手机号等 PII。
+- PDF 文件头校验只能降低伪装文件和解析资源滥用风险，不等同于病毒扫描；生产环境需要病毒扫描和隔离解析。
+- 邮件、面试建议和招聘问答当前是辅助输出，需要人工复核；系统不会自动发送邮件或创建真实会议链接。
+- 当前使用确定性本地 embedding，尚未提供召回准确率、排序质量、成本下降比例等评测指标。
+
+### 12. 相关文档
+
+- infra/README.md：基础设施启动、安全边界和 Compose 配置。
+- frontend/admin/README.md：前端开发和代理说明。
+- java-backend/README.md：Java API、业务流程规则和本地运行说明。
+- python-agent-runtime/README.md：Agent Runtime 接口和 DeepSeek 配置。
+- rag-service/README.md：RAG 存储模式、embedding 和 Milvus 配置。
+- docs/：技术设计、接口契约和实施记录。
