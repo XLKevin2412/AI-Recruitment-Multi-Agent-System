@@ -71,8 +71,9 @@ For individual module development:
 
 ### 5.1 Start From The Repository Root
 
+First open a terminal in your local repository root, then run:
+
 ```bat
-cd /d E:\Project\ai_recruitment_agent_team
 copy infra\.env.example infra\.env
 docker compose -f infra\docker-compose.yml --env-file infra\.env up -d --build
 docker compose -f infra\docker-compose.yml --env-file infra\.env ps
@@ -82,8 +83,10 @@ If `infra\.env` already exists, skip the copy command and run `docker compose ..
 
 ### 5.2 Start From The `infra` Directory
 
+If you are already in the repository root, you can also start from the `infra` directory:
+
 ```bat
-cd /d E:\Project\ai_recruitment_agent_team\infra
+cd infra
 copy .env.example .env
 docker compose --env-file .env up -d --build
 docker compose --env-file .env ps

@@ -74,8 +74,9 @@ docs/                  设计、接口契约和实施记录
 
 ### 5.1 从仓库根目录启动
 
+先在命令行进入你本机的仓库根目录，然后执行：
+
 ```bat
-cd /d E:\Project\ai_recruitment_agent_team
 copy infra\.env.example infra\.env
 docker compose -f infra\docker-compose.yml --env-file infra\.env up -d --build
 docker compose -f infra\docker-compose.yml --env-file infra\.env ps
@@ -85,8 +86,10 @@ docker compose -f infra\docker-compose.yml --env-file infra\.env ps
 
 ### 5.2 从 `infra` 目录启动
 
+如果你已经进入仓库根目录，也可以切到 `infra` 目录后启动：
+
 ```bat
-cd /d E:\Project\ai_recruitment_agent_team\infra
+cd infra
 copy .env.example .env
 docker compose --env-file .env up -d --build
 docker compose --env-file .env ps
